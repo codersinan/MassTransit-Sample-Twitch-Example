@@ -5,7 +5,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="Controllers" />
+      <PackageReference Include="MassTransit.Analyzers" Version="6.3.2" />
+      <PackageReference Include="MassTransit.AspNetCore" Version="6.3.2" />
+      <PackageReference Include="NSwag.AspNetCore" Version="13.6.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Sample.Components\Sample.Components.csproj" />
     </ItemGroup>
 
 
