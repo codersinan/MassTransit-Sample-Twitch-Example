@@ -1,3 +1,4 @@
+using System;
 using MassTransit;
 using MassTransit.Definition;
 using Microsoft.AspNetCore.Builder;
@@ -26,13 +27,11 @@ namespace Sample.Api
             services.TryAddSingleton(KebabCaseEndpointNameFormatter.Instance);
             services.AddMassTransit(cfg =>
             {
-                // cfg.AddConsumer<SubmitOrderConsumer>();
-                //
-                // cfg.AddMediator();
-
                 cfg.AddBus(provider => Bus.Factory.CreateUsingRabbitMq());
 
-                cfg.AddRequestClient<SubmitOrder>();
+                cfg.AddRequestClient<SubmitOrder>(
+                    new Uri($"exchange:{KebabCaseEndpointNameFormatter.Instance.Consumer<SubmitOrderConsumer>()}")
+                );
             });
 
             services.AddMassTransitHostedService();
