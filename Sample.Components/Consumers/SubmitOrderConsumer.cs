@@ -15,9 +15,14 @@ namespace Sample.Components.Consumers
             _logger = logger;
         }
 
+        public SubmitOrderConsumer()
+        {
+            
+        }
+
         public async Task Consume(ConsumeContext<SubmitOrder> context)
         {
-            _logger.Log(LogLevel.Debug, $"SubmitOrderConsumer:{context.Message.CustomerNumber}");
+            _logger?.Log(LogLevel.Debug, $"SubmitOrderConsumer:{context.Message.CustomerNumber}");
 
             if (context.Message.CustomerNumber.Contains("TEST"))
             {
