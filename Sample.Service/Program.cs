@@ -11,6 +11,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Configuration;
 using Sample.Components.Consumers;
+using Sample.Components.StateMachines;
 
 namespace Sample.Service
 {
@@ -35,6 +36,9 @@ namespace Sample.Service
                     services.AddMassTransit(cfg =>
                     {
                         cfg.AddConsumersFromNamespaceContaining<SubmitOrderConsumer>();
+                        
+                        cfg.AddSagaStateMachine<OrderStateMachine, OrderState>()
+                            .RedisRepository();
 
                         cfg.AddBus(ConfigureBus);
                     });

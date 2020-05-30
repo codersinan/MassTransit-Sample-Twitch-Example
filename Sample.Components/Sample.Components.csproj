@@ -10,6 +10,7 @@
 
     <ItemGroup>
       <PackageReference Include="MassTransit" Version="6.3.2" />
+      <PackageReference Include="MassTransit.Redis" Version="6.3.2" />
     </ItemGroup>
 
 </Project>

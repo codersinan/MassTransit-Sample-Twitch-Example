@@ -12,3 +12,10 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+  redis:
+    container_name: twitch-redis
+    image: redis:6-alpine
+    networks:
+      - twitch
+    ports:
+      - "6379:6379"

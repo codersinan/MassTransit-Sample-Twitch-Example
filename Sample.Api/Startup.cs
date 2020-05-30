@@ -32,6 +32,8 @@ namespace Sample.Api
                 cfg.AddRequestClient<SubmitOrder>(
                     new Uri($"exchange:{KebabCaseEndpointNameFormatter.Instance.Consumer<SubmitOrderConsumer>()}")
                 );
+                
+                cfg.AddRequestClient<CheckOrder>();
             });
 
             services.AddMassTransitHostedService();
