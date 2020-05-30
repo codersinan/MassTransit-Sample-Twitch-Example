@@ -4,12 +4,12 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using MassTransit;
 using MassTransit.Definition;
+using MassTransit.MongoDbIntegration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Configuration;
 using Sample.Components.Consumers;
 using Sample.Components.StateMachines;
 
@@ -38,8 +38,12 @@ namespace Sample.Service
                         cfg.AddConsumersFromNamespaceContaining<SubmitOrderConsumer>();
                         // cfg.AddConsumer<SubmitOrderConsumer>(typeof(SubmitOrderConsumerDefinition));
                         cfg.AddSagaStateMachine<OrderStateMachine, OrderState>()
-                            .RedisRepository();
-
+                            .MongoDbRepository(r =>
+                            {
+                                r.Connection = "mongodb://127.0.0.1";
+                                r.DatabaseName = "orders";
+                            });
+                           
                         cfg.AddBus(ConfigureBus);
                     });
 

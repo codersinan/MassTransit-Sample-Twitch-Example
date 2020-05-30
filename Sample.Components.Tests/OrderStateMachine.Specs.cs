@@ -7,6 +7,7 @@ using MassTransit.Testing;
 using NUnit.Framework;
 using Sample.Components.Consumers;
 using Sample.Components.StateMachines;
+using Sample.Contracts.Customer;
 using Sample.Contracts.Order;
 
 namespace Sample.Components.Tests
@@ -93,6 +94,64 @@ namespace Sample.Components.Tests
             response.Message.OrderId.Should().Be(orderId);
         }
 
+        [Test]
+        public async Task Should_Cancel_When_Customer_Account_Closed()
+        {
+            //arrange
+            var orderId = NewId.NextGuid();
+            var customerNumber = "12345";
+            //act
+            await _harness.Bus.Publish<OrderSubmitted>(new OrderSubmitted
+            {
+                OrderId = orderId,
+                Timestamp = InVar.Timestamp,
+                CustomerNumber = customerNumber
+            });
+            //assert
+            _saga.Created.Select(x => x.CorrelationId == orderId).Any().Should().BeTrue();
+
+            var instanceId = await _saga.Exists(orderId, x => x.Submitted);
+            instanceId.Should().NotBeNull();
+
+            await _harness.Bus.Publish<CustomerAccountClosed>(new CustomerAccountClosed
+            {
+                CustomerId = InVar.Id,
+                CustomerNumber = customerNumber,
+            });
+
+            instanceId = await _saga.Exists(orderId, x => x.Cancelled);
+            instanceId.Should().NotBeNull();
+        }
+
+        [Test]
+        public async Task Should_Accept_When_Order_Is_Accepted()
+        {
+            //arrange
+            var orderId = NewId.NextGuid();
+            var customerNumber = "12345";
+            //act
+            await _harness.Bus.Publish<OrderSubmitted>(new OrderSubmitted
+            {
+                OrderId = orderId,
+                Timestamp = InVar.Timestamp,
+                CustomerNumber = customerNumber
+            });
+            //assert
+            _saga.Created.Select(x => x.CorrelationId == orderId).Any().Should().BeTrue();
+
+            var instanceId = await _saga.Exists(orderId, x => x.Submitted);
+            instanceId.Should().NotBeNull();
+
+            await _harness.Bus.Publish<OrderAccepted>(new OrderAccepted
+            {
+                OrderId = orderId,
+                Timestamp = InVar.Timestamp
+            });
+
+            instanceId = await _saga.Exists(orderId, x => x.Accepted);
+            instanceId.Should().NotBeNull();
+        }
+        
         [TearDown]
         public async Task TearDown()
         {

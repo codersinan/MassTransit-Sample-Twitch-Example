@@ -3,7 +3,7 @@ version: "3.6"
 networks:
   twitch:
 
-services: 
+services:
   rabbitmq:
     container_name: twitch-rabbitmq
     image: masstransit/rabbitmq:latest
@@ -12,6 +12,7 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+
   redis:
     container_name: twitch-redis
     image: redis:6-alpine
@@ -19,3 +20,11 @@ services:
       - twitch
     ports:
       - "6379:6379"
+
+  mongodb:
+    container_name: twitch-mongo
+    image: mongo:4.2-bionic
+    networks:
+      - twitch
+    ports:
+      - "27017:27017"

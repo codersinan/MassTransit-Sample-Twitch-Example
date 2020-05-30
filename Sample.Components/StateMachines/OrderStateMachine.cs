@@ -1,6 +1,8 @@
 using System;
 using Automatonymous;
 using MassTransit;
+using Sample.Components.OrderStateMachineActivities;
+using Sample.Contracts.Customer;
 using Sample.Contracts.Order;
 
 namespace Sample.Components.StateMachines
@@ -13,11 +15,17 @@ namespace Sample.Components.StateMachines
         public Event<OrderSubmitted> OrderSubmitted { get; private set; }
         public Event<CheckOrder> OrderStateRequested { get; private set; }
 
+        public Event<CustomerAccountClosed> AccountClosed { get; private set; }
+
+        public Event<OrderAccepted> OrderAccepted { get; set; }
+
         #endregion
 
         #region States
 
         public State Submitted { get; private set; }
+        public State Accepted { get; private set; }
+        public State Cancelled { get; private set; }
 
         #endregion
 
@@ -38,6 +46,10 @@ namespace Sample.Components.StateMachines
                     }
                 }));
             });
+            Event(() => AccountClosed,
+                x => x.CorrelateBy((saga, context) => saga.CustomerNumber == context.Message.CustomerNumber));
+            Event(() => OrderAccepted, x => x.CorrelateById(m => m.Message.OrderId));
+
             InstanceState(x => x.CurrentState);
 
             Initially(
@@ -52,7 +64,12 @@ namespace Sample.Components.StateMachines
             );
 
             During(Submitted,
-                Ignore(OrderSubmitted)
+                Ignore(OrderSubmitted),
+                When(AccountClosed)
+                    .TransitionTo(Cancelled),
+                When(OrderAccepted)
+                    .Activity(x => x.OfType<AcceptOrderActivity>()
+                        .TransitionTo(Accepted))
             );
 
             DuringAny(
