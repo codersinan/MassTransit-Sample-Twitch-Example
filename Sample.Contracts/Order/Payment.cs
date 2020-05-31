@@ -1,10 +1,8 @@
-using System;
-
 namespace Sample.Contracts.Order
 {
-    public class FulfilOrder
+    public class Payment
     {
-        public Guid OrderId { get; set; }
         public string CardNumber { get; set; }
+        public decimal Amount { get; set; }
     }
 }

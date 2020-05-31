@@ -2,9 +2,10 @@ using System;
 
 namespace Sample.Contracts.Order
 {
-    public class FulfilOrder
+    public class OrderFulfillmentFaulted
     {
         public Guid OrderId { get; set; }
-        public string CardNumber { get; set; }
+        
+        public DateTime Timestamp { get; set; }
     }
 }

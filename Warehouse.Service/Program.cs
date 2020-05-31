@@ -36,7 +36,7 @@ namespace Warehouse.Service
                     services.AddMassTransit(cfg =>
                     {
                         cfg.AddConsumersFromNamespaceContaining<AllocateInventoryConsumer>();
-                        cfg.AddSagaStateMachine<AllocationStateMachine, AllocationState>()
+                        cfg.AddSagaStateMachine<AllocationStateMachine, AllocationState>(typeof(AllocateStateMachineDefinition))
                             .MongoDbRepository(r =>
                             {
                                 r.Connection = "mongodb://127.0.0.1";

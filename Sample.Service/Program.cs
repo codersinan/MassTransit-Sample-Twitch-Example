@@ -44,7 +44,7 @@ namespace Sample.Service
                         // cfg.AddConsumer<SubmitOrderConsumer>(typeof(SubmitOrderConsumerDefinition));
                         cfg.AddActivitiesFromNamespaceContaining<AllocateInventoryActivity>();
 
-                        cfg.AddSagaStateMachine<OrderStateMachine, OrderState>()
+                        cfg.AddSagaStateMachine<OrderStateMachine, OrderState>(typeof(OrderStateMachineDefinition))
                             .MongoDbRepository(r =>
                             {
                                 r.Connection = "mongodb://127.0.0.1";

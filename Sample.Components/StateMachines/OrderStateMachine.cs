@@ -18,6 +18,7 @@ namespace Sample.Components.StateMachines
         public Event<CustomerAccountClosed> AccountClosed { get; private set; }
 
         public Event<OrderAccepted> OrderAccepted { get; set; }
+        public Event<OrderFulfillmentFaulted> FullfillmentFaulted { get; set; }
 
         #endregion
 
@@ -26,6 +27,7 @@ namespace Sample.Components.StateMachines
         public State Submitted { get; private set; }
         public State Accepted { get; private set; }
         public State Cancelled { get; private set; }
+        public State Faulted { get; private set; }
 
         #endregion
 
@@ -49,6 +51,7 @@ namespace Sample.Components.StateMachines
             Event(() => AccountClosed,
                 x => x.CorrelateBy((saga, context) => saga.CustomerNumber == context.Message.CustomerNumber));
             Event(() => OrderAccepted, x => x.CorrelateById(m => m.Message.OrderId));
+            Event(() => FullfillmentFaulted, x => x.CorrelateById(m => m.Message.OrderId));
 
             InstanceState(x => x.CurrentState);
 
@@ -72,6 +75,7 @@ namespace Sample.Components.StateMachines
                         .TransitionTo(Accepted))
             );
 
+
             DuringAny(
                 When(OrderSubmitted)
                     .Then(context =>
@@ -81,6 +85,11 @@ namespace Sample.Components.StateMachines
                     })
             );
 
+            During(Accepted,
+                When(FullfillmentFaulted)
+                    .TransitionTo(Faulted)
+            );
+            
             DuringAny(
                 When(OrderStateRequested)
                     .RespondAsync(x => x.Init<OrderStatus>(new OrderStatus
