@@ -4,12 +4,15 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using MassTransit;
 using MassTransit.Definition;
+using MassTransit.MongoDbIntegration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Warehouse.Components.Consumers;
+using Warehouse.Components.StateMachines;
+
 namespace Warehouse.Service
 {
     class Program
@@ -29,12 +32,17 @@ namespace Warehouse.Service
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
-                  
                     services.TryAddSingleton(KebabCaseEndpointNameFormatter.Instance);
                     services.AddMassTransit(cfg =>
                     {
                         cfg.AddConsumersFromNamespaceContaining<AllocateInventoryConsumer>();
-                       
+                        cfg.AddSagaStateMachine<AllocationStateMachine, AllocationState>()
+                            .MongoDbRepository(r =>
+                            {
+                                r.Connection = "mongodb://127.0.0.1";
+                                r.DatabaseName = "allocations";
+                            });
+
                         cfg.AddBus(ConfigureBus);
                     });
 
@@ -57,6 +65,7 @@ namespace Warehouse.Service
         {
             return Bus.Factory.CreateUsingRabbitMq(cfg =>
             {
+                cfg.UseMessageScheduler(new Uri("rabbitmq://localhost/quartz"));
                 cfg.ConfigureEndpoints(context);
             });
         }
