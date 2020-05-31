@@ -1,14 +1,13 @@
 using System;
 using Automatonymous;
-// using MassTransit.RedisIntegration;//Redis
-using MassTransit.MongoDbIntegration.Saga; //Mongo
-using MongoDB.Bson.Serialization.Attributes; //Mongo
+using MassTransit.MongoDbIntegration.Saga;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Sample.Components.StateMachines
 {
     public class OrderState :
         SagaStateMachineInstance,
-        IVersionedSaga // Redis And Mongo Marten Doesnt need that 
+        IVersionedSaga
     {
         [BsonId] 
         public Guid CorrelationId { get; set; }

@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Automatonymous;
 using GreenPipes;
+using MassTransit;
 using Sample.Components.StateMachines;
 using Sample.Contracts.Order;
 
@@ -23,6 +24,14 @@ namespace Sample.Components.OrderStateMachineActivities
             Behavior<OrderState, OrderAccepted> next)
         {
             Console.WriteLine($"Hello,{context.Data.OrderId}");
+
+            var consumeContext = context.GetPayload<ConsumeContext>();
+
+            var sendEndpoint = await context.GetSendEndpoint(new Uri("exchange:fulfill-order"));
+            await sendEndpoint.Send<FulfilOrder>(new FulfilOrder
+            {
+                OrderId = context.Data.OrderId
+            });
 
             await next.Execute(context).ConfigureAwait(false);
         }

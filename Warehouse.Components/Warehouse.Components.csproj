@@ -5,13 +5,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Sample.Contracts\Sample.Contracts.csproj" />
       <ProjectReference Include="..\Warehouse.Contracts\Warehouse.Contracts.csproj" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="MassTransit" Version="6.3.2" />
-      <PackageReference Include="MassTransit.MongoDb" Version="6.3.2" />
     </ItemGroup>
 
 </Project>

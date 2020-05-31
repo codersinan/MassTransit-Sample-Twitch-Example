@@ -5,8 +5,8 @@ using Sample.Contracts.Order;
 
 namespace Sample.Components.Consumers
 {
-    public class SubmitOrderConsumer
-        : IConsumer<SubmitOrder>
+    public class SubmitOrderConsumer:
+        IConsumer<SubmitOrder>
     {
         private readonly ILogger<SubmitOrderConsumer> _logger;
 

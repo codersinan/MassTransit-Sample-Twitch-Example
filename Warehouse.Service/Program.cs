@@ -4,19 +4,13 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using MassTransit;
 using MassTransit.Definition;
-using MassTransit.MongoDbIntegration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Sample.Components.Consumers;
-using Sample.Components.CourierActivities;
-using Sample.Components.OrderStateMachineActivities;
-using Sample.Components.StateMachines;
-using Warehouse.Contracts;
-
-namespace Sample.Service
+using Warehouse.Components.Consumers;
+namespace Warehouse.Service
 {
     class Program
     {
@@ -35,25 +29,13 @@ namespace Sample.Service
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
-                    services.AddScoped<AcceptOrderActivity>();
-                    
+                  
                     services.TryAddSingleton(KebabCaseEndpointNameFormatter.Instance);
                     services.AddMassTransit(cfg =>
                     {
-                        cfg.AddConsumersFromNamespaceContaining<SubmitOrderConsumer>();
-                        // cfg.AddConsumer<SubmitOrderConsumer>(typeof(SubmitOrderConsumerDefinition));
-                        cfg.AddActivitiesFromNamespaceContaining<AllocateInventoryActivity>();
-
-                        cfg.AddSagaStateMachine<OrderStateMachine, OrderState>()
-                            .MongoDbRepository(r =>
-                            {
-                                r.Connection = "mongodb://127.0.0.1";
-                                r.DatabaseName = "orders";
-                            });
-
+                        cfg.AddConsumersFromNamespaceContaining<AllocateInventoryConsumer>();
+                       
                         cfg.AddBus(ConfigureBus);
-                        
-                        cfg.AddRequestClient<AllocateInventory>();
                     });
 
                     services.AddHostedService<MassTransitConsoleHostedService>();
@@ -73,7 +55,10 @@ namespace Sample.Service
 
         static IBusControl ConfigureBus(IRegistrationContext<IServiceProvider> context)
         {
-            return Bus.Factory.CreateUsingRabbitMq(cfg => { cfg.ConfigureEndpoints(context); });
+            return Bus.Factory.CreateUsingRabbitMq(cfg =>
+            {
+                cfg.ConfigureEndpoints(context);
+            });
         }
     }
 }
