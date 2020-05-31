@@ -19,6 +19,7 @@ namespace Sample.Components.StateMachines
 
         public Event<OrderAccepted> OrderAccepted { get; set; }
         public Event<OrderFulfillmentFaulted> FullfillmentFaulted { get; set; }
+        public Event<OrderFulfillmentCompleted> FullfillmentCompleted { get; set; }
 
         #endregion
 
@@ -28,6 +29,7 @@ namespace Sample.Components.StateMachines
         public State Accepted { get; private set; }
         public State Cancelled { get; private set; }
         public State Faulted { get; private set; }
+        public State Completed { get; private set; }
 
         #endregion
 
@@ -52,6 +54,7 @@ namespace Sample.Components.StateMachines
                 x => x.CorrelateBy((saga, context) => saga.CustomerNumber == context.Message.CustomerNumber));
             Event(() => OrderAccepted, x => x.CorrelateById(m => m.Message.OrderId));
             Event(() => FullfillmentFaulted, x => x.CorrelateById(m => m.Message.OrderId));
+            Event(() => FullfillmentCompleted, x => x.CorrelateById(m => m.Message.OrderId));
 
             InstanceState(x => x.CurrentState);
 
@@ -61,6 +64,8 @@ namespace Sample.Components.StateMachines
                     {
                         context.Instance.SubmitDate = context.Data.Timestamp;
                         context.Instance.CustomerNumber = context.Data.CustomerNumber;
+                        context.Instance.PaymentCardNumber = context.Data.PaymentCardNumber;
+
                         context.Instance.Updated = DateTime.UtcNow;
                     })
                     .TransitionTo(Submitted)
@@ -87,9 +92,11 @@ namespace Sample.Components.StateMachines
 
             During(Accepted,
                 When(FullfillmentFaulted)
-                    .TransitionTo(Faulted)
+                    .TransitionTo(Faulted),
+                When(FullfillmentCompleted)
+                    .TransitionTo(Completed)
             );
-            
+
             DuringAny(
                 When(OrderStateRequested)
                     .RespondAsync(x => x.Init<OrderStatus>(new OrderStatus

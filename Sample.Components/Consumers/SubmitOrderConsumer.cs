@@ -44,7 +44,8 @@ namespace Sample.Components.Consumers
             {
                 OrderId = context.Message.OrderId,
                 Timestamp = context.Message.Timestamp,
-                CustomerNumber = context.Message.CustomerNumber
+                CustomerNumber = context.Message.CustomerNumber,
+                PaymentCardNumber = context.Message.PaymentCardNumber
             });
 
             if (context.RequestId != null)

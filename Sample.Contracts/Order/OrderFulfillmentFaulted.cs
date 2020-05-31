@@ -8,4 +8,11 @@ namespace Sample.Contracts.Order
         
         public DateTime Timestamp { get; set; }
     }
+    
+    public class OrderFulfillmentCompleted
+    {
+        public Guid OrderId { get; set; }
+        
+        public DateTime Timestamp { get; set; }
+    }
 }

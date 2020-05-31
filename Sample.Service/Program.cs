@@ -73,7 +73,10 @@ namespace Sample.Service
 
         static IBusControl ConfigureBus(IRegistrationContext<IServiceProvider> context)
         {
-            return Bus.Factory.CreateUsingRabbitMq(cfg => { cfg.ConfigureEndpoints(context); });
+            return Bus.Factory.CreateUsingRabbitMq(cfg =>
+            {
+                cfg.ConfigureEndpoints(context);
+            });
         }
     }
 }

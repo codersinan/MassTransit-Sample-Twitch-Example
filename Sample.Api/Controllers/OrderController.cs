@@ -53,7 +53,7 @@ namespace Sample.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post(Guid id, string customerNumber)
+        public async Task<IActionResult> Post(Guid id, string customerNumber, string paymentCardNumber)
         {
             var (accepted, rejected) =
                 await _submitOrderRequestClient.GetResponse<OrderSubmissionAccepted, OrderSubmissionRejected>(
@@ -61,7 +61,8 @@ namespace Sample.Api.Controllers
                     {
                         OrderId = id,
                         Timestamp = InVar.Timestamp,
-                        CustomerNumber = customerNumber
+                        CustomerNumber = customerNumber,
+                        PaymentCardNumber = paymentCardNumber
                     });
             if (accepted.IsCompletedSuccessfully)
             {
@@ -78,7 +79,7 @@ namespace Sample.Api.Controllers
         [HttpPatch]
         public async Task<IActionResult> Patch(Guid id)
         {
-            await _publishEndpoint.Publish<OrderAccepted >(new OrderAccepted
+            await _publishEndpoint.Publish<OrderAccepted>(new OrderAccepted
             {
                 OrderId = id,
                 Timestamp = InVar.Timestamp

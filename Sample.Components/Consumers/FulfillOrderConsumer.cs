@@ -23,15 +23,23 @@ namespace Sample.Components.Consumers
 
             builder.AddActivity("PaymentActivity", new Uri("queue:payment_execute"), new Payment
             {
-                CardNumber = "5999-1234-5678-9812",
+                CardNumber = context.Message.PaymentCardNumber,
                 Amount = 99.95m
             });
 
             builder.AddVariable("OrderId", context.Message.OrderId);
 
-            await builder.AddSubscription(context.SourceAddress, RoutingSlipEvents.Faulted,
-                RoutingSlipEventContents.None,
-                x => x.Send<OrderFulfillmentFaulted>(new OrderFulfillmentFaulted
+            await builder.AddSubscription(context.SourceAddress,
+                RoutingSlipEvents.Faulted | RoutingSlipEvents.Supplemental,
+                RoutingSlipEventContents.None, x => x.Send<OrderFulfillmentFaulted>(new OrderFulfillmentFaulted
+                {
+                    OrderId = context.Message.OrderId,
+                    Timestamp = InVar.Timestamp
+                }));
+            
+            await builder.AddSubscription(context.SourceAddress,
+                RoutingSlipEvents.Completed | RoutingSlipEvents.Supplemental,
+                RoutingSlipEventContents.None, x => x.Send<OrderFulfillmentCompleted>(new OrderFulfillmentCompleted
                 {
                     OrderId = context.Message.OrderId,
                     Timestamp = InVar.Timestamp

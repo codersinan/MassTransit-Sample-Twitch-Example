@@ -30,7 +30,9 @@ namespace Sample.Components.OrderStateMachineActivities
             var sendEndpoint = await context.GetSendEndpoint(new Uri("exchange:fulfill-order"));
             await sendEndpoint.Send<FulfilOrder>(new FulfilOrder
             {
-                OrderId = context.Data.OrderId
+                OrderId = context.Data.OrderId,
+                CustomerNumber = context.Instance.CustomerNumber,
+                PaymentCardNumber = context.Instance.PaymentCardNumber
             });
 
             await next.Execute(context).ConfigureAwait(false);
