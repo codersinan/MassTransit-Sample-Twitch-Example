@@ -27,7 +27,7 @@ namespace Sample.Components.OrderStateMachineActivities
 
             var consumeContext = context.GetPayload<ConsumeContext>();
 
-            var sendEndpoint = await context.GetSendEndpoint(new Uri("exchange:fulfill-order"));
+            var sendEndpoint = await context.GetSendEndpoint(new Uri("queue:fulfill-order"));
             await sendEndpoint.Send<FulfilOrder>(new FulfilOrder
             {
                 OrderId = context.Data.OrderId,

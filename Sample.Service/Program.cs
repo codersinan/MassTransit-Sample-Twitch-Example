@@ -3,6 +3,7 @@ using System.Linq;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using MassTransit;
+using MassTransit.Courier.Contracts;
 using MassTransit.Definition;
 using MassTransit.MongoDbIntegration;
 using Microsoft.Extensions.Configuration;
@@ -10,10 +11,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Sample.Components.BatchConsumers;
 using Sample.Components.Consumers;
 using Sample.Components.CourierActivities;
 using Sample.Components.OrderStateMachineActivities;
 using Sample.Components.StateMachines;
+using Serilog;
+using Serilog.Events;
 using Warehouse.Contracts;
 
 namespace Sample.Service
@@ -24,6 +28,13 @@ namespace Sample.Service
         {
             var isService = !(Debugger.IsAttached || args.Contains("--console"));
 
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .CreateLogger();
+            
             var builder = new HostBuilder()
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
@@ -36,7 +47,9 @@ namespace Sample.Service
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddScoped<AcceptOrderActivity>();
-                    
+
+                    services.AddScoped<RoutingSlipBatchEventConsumer>();
+
                     services.TryAddSingleton(KebabCaseEndpointNameFormatter.Instance);
                     services.AddMassTransit(cfg =>
                     {
@@ -52,7 +65,7 @@ namespace Sample.Service
                             });
 
                         cfg.AddBus(ConfigureBus);
-                        
+
                         cfg.AddRequestClient<AllocateInventory>();
                     });
 
@@ -60,8 +73,9 @@ namespace Sample.Service
                 })
                 .ConfigureLogging((hostingContext, logging) =>
                 {
+                    logging.AddSerilog(dispose: true);
                     logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
-                    logging.AddConsole();
+                    // logging.AddConsole();
                 });
 
 
@@ -69,12 +83,29 @@ namespace Sample.Service
                 await builder.UseWindowsService().Build().RunAsync();
             else
                 await builder.RunConsoleAsync();
+            
+            Log.CloseAndFlush();
         }
 
         static IBusControl ConfigureBus(IRegistrationContext<IServiceProvider> context)
         {
             return Bus.Factory.CreateUsingRabbitMq(cfg =>
             {
+                cfg.UseMessageScheduler(new Uri("queue://quartz"));
+                cfg.ReceiveEndpoint(KebabCaseEndpointNameFormatter.Instance.Consumer<RoutingSlipBatchEventConsumer>(),
+                    e =>
+                    {
+                        e.PrefetchCount = 10;
+                        e.Batch<RoutingSlipCompleted>(b =>
+                        {
+                            b.MessageLimit = 10;
+                            b.TimeLimit = TimeSpan.FromSeconds(5);
+
+                            b.Consumer<RoutingSlipBatchEventConsumer, RoutingSlipCompleted>(context.Container);
+                        });
+                        
+                        // e.DiscardFaultedMessages();
+                    });
                 cfg.ConfigureEndpoints(context);
             });
         }

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Sample.Api.Models;
 using Sample.Contracts.Order;
 
 namespace Sample.Api.Controllers
@@ -53,16 +54,16 @@ namespace Sample.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post(Guid id, string customerNumber, string paymentCardNumber)
+        public async Task<IActionResult> Post([FromBody]OrderViewModel viewModel)
         {
             var (accepted, rejected) =
                 await _submitOrderRequestClient.GetResponse<OrderSubmissionAccepted, OrderSubmissionRejected>(
                     new SubmitOrder
                     {
-                        OrderId = id,
+                        OrderId = viewModel.Id,
                         Timestamp = InVar.Timestamp,
-                        CustomerNumber = customerNumber,
-                        PaymentCardNumber = paymentCardNumber
+                        CustomerNumber = viewModel.CustomerNumber,
+                        PaymentCardNumber = viewModel.PaymentCardNumber
                     });
             if (accepted.IsCompletedSuccessfully)
             {
@@ -91,7 +92,7 @@ namespace Sample.Api.Controllers
         [HttpPut]
         public async Task<IActionResult> Put(Guid id, string customerNumber)
         {
-            var endpoint = await _sendEndpointProvider.GetSendEndpoint(new Uri($"exchange:submit-order"));
+            var endpoint = await _sendEndpointProvider.GetSendEndpoint(new Uri($"queue:submit-order"));
             await endpoint.Send<SubmitOrder>(new SubmitOrder
             {
                 OrderId = id,

@@ -10,6 +10,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Events;
 using Warehouse.Components.Consumers;
 using Warehouse.Components.StateMachines;
 
@@ -20,6 +22,13 @@ namespace Warehouse.Service
         static async Task Main(string[] args)
         {
             var isService = !(Debugger.IsAttached || args.Contains("--console"));
+
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .CreateLogger();
 
             var builder = new HostBuilder()
                 .ConfigureAppConfiguration((hostingContext, config) =>
@@ -36,7 +45,8 @@ namespace Warehouse.Service
                     services.AddMassTransit(cfg =>
                     {
                         cfg.AddConsumersFromNamespaceContaining<AllocateInventoryConsumer>();
-                        cfg.AddSagaStateMachine<AllocationStateMachine, AllocationState>(typeof(AllocateStateMachineDefinition))
+                        cfg.AddSagaStateMachine<AllocationStateMachine, AllocationState>(
+                                typeof(AllocateStateMachineDefinition))
                             .MongoDbRepository(r =>
                             {
                                 r.Connection = "mongodb://127.0.0.1";
@@ -50,8 +60,8 @@ namespace Warehouse.Service
                 })
                 .ConfigureLogging((hostingContext, logging) =>
                 {
+                    logging.AddSerilog(dispose: true);
                     logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
-                    logging.AddConsole();
                 });
 
 
@@ -59,6 +69,8 @@ namespace Warehouse.Service
                 await builder.UseWindowsService().Build().RunAsync();
             else
                 await builder.RunConsoleAsync();
+            
+            Log.CloseAndFlush();
         }
 
         static IBusControl ConfigureBus(IRegistrationContext<IServiceProvider> context)
