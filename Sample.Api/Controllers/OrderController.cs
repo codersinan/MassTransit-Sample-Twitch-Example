@@ -1,6 +1,8 @@
 using System;
 using System.Threading.Tasks;
 using MassTransit;
+using MassTransit.MessageData;
+using MassTransit.MessageData.Values;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Sample.Api.Models;
@@ -54,8 +56,13 @@ namespace Sample.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody]OrderViewModel viewModel)
+        public async Task<IActionResult> Post([FromBody] OrderViewModel viewModel)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            // IMessageDataRepository repository;
+
             var (accepted, rejected) =
                 await _submitOrderRequestClient.GetResponse<OrderSubmissionAccepted, OrderSubmissionRejected>(
                     new SubmitOrder
@@ -63,7 +70,8 @@ namespace Sample.Api.Controllers
                         OrderId = viewModel.Id,
                         Timestamp = InVar.Timestamp,
                         CustomerNumber = viewModel.CustomerNumber,
-                        PaymentCardNumber = viewModel.PaymentCardNumber
+                        PaymentCardNumber = viewModel.PaymentCardNumber,
+                        Notes = new PutMessageData<string>(viewModel.Notes)
                     });
             if (accepted.IsCompletedSuccessfully)
             {

@@ -1,4 +1,5 @@
 using System;
+using MassTransit;
 
 namespace Sample.Contracts.Order
 {
@@ -9,5 +10,7 @@ namespace Sample.Contracts.Order
 
         public string CustomerNumber { get; set; }
         public string PaymentCardNumber { get; set; }
+
+        public MessageData<string> Notes { get; set; }
     }
 }

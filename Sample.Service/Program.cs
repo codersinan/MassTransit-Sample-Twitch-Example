@@ -6,6 +6,7 @@ using MassTransit;
 using MassTransit.Courier.Contracts;
 using MassTransit.Definition;
 using MassTransit.MongoDbIntegration;
+using MassTransit.MongoDbIntegration.MessageData;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -91,6 +92,8 @@ namespace Sample.Service
         {
             return Bus.Factory.CreateUsingRabbitMq(cfg =>
             {
+                cfg.UseMessageData(new MongoDbMessageDataRepository("mongodb://127.0.0.1","attachments"));
+                
                 cfg.UseMessageScheduler(new Uri("queue://quartz"));
                 cfg.ReceiveEndpoint(KebabCaseEndpointNameFormatter.Instance.Consumer<RoutingSlipBatchEventConsumer>(),
                     e =>

@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -5,7 +6,7 @@ using Sample.Contracts.Order;
 
 namespace Sample.Components.Consumers
 {
-    public class SubmitOrderConsumer:
+    public class SubmitOrderConsumer :
         IConsumer<SubmitOrder>
     {
         private readonly ILogger<SubmitOrderConsumer> _logger;
@@ -17,7 +18,6 @@ namespace Sample.Components.Consumers
 
         public SubmitOrderConsumer()
         {
-            
         }
 
         public async Task Consume(ConsumeContext<SubmitOrder> context)
@@ -40,12 +40,20 @@ namespace Sample.Components.Consumers
                 return;
             }
 
+            var notes = context.Message.Notes;
+            if (notes.HasValue)
+            {
+                string notesValue = await notes.Value;
+                Console.WriteLine($"Notes: {notesValue}");
+            }
+
             await context.Publish<OrderSubmitted>(new OrderSubmitted
             {
                 OrderId = context.Message.OrderId,
                 Timestamp = context.Message.Timestamp,
                 CustomerNumber = context.Message.CustomerNumber,
-                PaymentCardNumber = context.Message.PaymentCardNumber
+                PaymentCardNumber = context.Message.PaymentCardNumber,
+                Notes=context.Message.Notes
             });
 
             if (context.RequestId != null)

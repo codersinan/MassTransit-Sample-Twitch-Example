@@ -54,7 +54,7 @@ class Program
                         Id = NewId.NextGuid(),
                         CustomerNumber = $"CUSTOMER{i}",
                         PaymentCardNumber = i % 4 == 0 ? "5999" : "4000-1234",
-                        // Notes = new string('*', 1000 * (i + 1))
+                        Notes = new string('*', 1000 * (i + 1))
                     };
 
                     tasks.Add(Execute(order));
@@ -133,7 +133,7 @@ public class OrderModel
     public Guid Id { get; set; }
     public string CustomerNumber { get; set; }
     public string PaymentCardNumber { get; set; }
-    // public string Notes { get; set; }
+    public string Notes { get; set; }
 }
 
 
