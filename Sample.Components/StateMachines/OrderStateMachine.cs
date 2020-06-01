@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Automatonymous;
 using MassTransit;
 using Sample.Components.OrderStateMachineActivities;
@@ -18,8 +19,10 @@ namespace Sample.Components.StateMachines
         public Event<CustomerAccountClosed> AccountClosed { get; private set; }
 
         public Event<OrderAccepted> OrderAccepted { get; set; }
-        public Event<OrderFulfillmentFaulted> FullfillmentFaulted { get; set; }
-        public Event<OrderFulfillmentCompleted> FullfillmentCompleted { get; set; }
+        public Event<OrderFulfillmentFaulted> FulfillmentFaulted { get; set; }
+        public Event<OrderFulfillmentCompleted> FulfillmentCompleted { get; set; }
+
+        public Event<Fault<FulfilOrder>> FulfillOrderFaulted { get; set; }
 
         #endregion
 
@@ -53,8 +56,9 @@ namespace Sample.Components.StateMachines
             Event(() => AccountClosed,
                 x => x.CorrelateBy((saga, context) => saga.CustomerNumber == context.Message.CustomerNumber));
             Event(() => OrderAccepted, x => x.CorrelateById(m => m.Message.OrderId));
-            Event(() => FullfillmentFaulted, x => x.CorrelateById(m => m.Message.OrderId));
-            Event(() => FullfillmentCompleted, x => x.CorrelateById(m => m.Message.OrderId));
+            Event(() => FulfillmentFaulted, x => x.CorrelateById(m => m.Message.OrderId));
+            Event(() => FulfillmentCompleted, x => x.CorrelateById(m => m.Message.OrderId));
+            Event(() => FulfillOrderFaulted, x => x.CorrelateById(m => m.Message.Message.OrderId));
 
             InstanceState(x => x.CurrentState);
 
@@ -80,20 +84,15 @@ namespace Sample.Components.StateMachines
                         .TransitionTo(Accepted))
             );
 
-
-            DuringAny(
-                When(OrderSubmitted)
-                    .Then(context =>
-                    {
-                        context.Instance.SubmitDate ??= context.Data.Timestamp;
-                        context.Instance.CustomerNumber ??= context.Data.CustomerNumber;
-                    })
-            );
-
             During(Accepted,
-                When(FullfillmentFaulted)
+                When(FulfillOrderFaulted)
+                    .Then(context =>
+                        Console.WriteLine(
+                            $"Fulfill Order Faulted: {context.Data.Exceptions.FirstOrDefault()?.Message}"))
                     .TransitionTo(Faulted),
-                When(FullfillmentCompleted)
+                When(FulfillmentFaulted)
+                    .TransitionTo(Faulted),
+                When(FulfillmentCompleted)
                     .TransitionTo(Completed)
             );
 
@@ -105,6 +104,15 @@ namespace Sample.Components.StateMachines
                         State = x.Instance.CurrentState,
                         CustomerNumber = x.Instance.CustomerNumber
                     }))
+            );
+
+            DuringAny(
+                When(OrderSubmitted)
+                    .Then(context =>
+                    {
+                        context.Instance.SubmitDate ??= context.Data.Timestamp;
+                        context.Instance.CustomerNumber ??= context.Data.CustomerNumber;
+                    })
             );
         }
     }
