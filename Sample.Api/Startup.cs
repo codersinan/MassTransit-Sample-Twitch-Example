@@ -1,7 +1,6 @@
 using System;
 using MassTransit;
 using MassTransit.Definition;
-using MassTransit.MessageData;
 using MassTransit.MongoDbIntegration.MessageData;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;

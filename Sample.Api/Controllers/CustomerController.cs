@@ -4,7 +4,6 @@ using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Sample.Contracts.Customer;
-using Sample.Contracts.Order;
 
 namespace Sample.Api.Controllers
 {

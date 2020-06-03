@@ -39,6 +39,7 @@ namespace Sample.Components.StateMachines
         public OrderStateMachine()
         {
             Event(() => OrderSubmitted, x => x.CorrelateById(m => m.Message.OrderId));
+            Event(() => OrderAccepted, x => x.CorrelateById(m => m.Message.OrderId));
             Event(() => OrderStateRequested, x =>
             {
                 x.CorrelateById(m => m.Message.OrderId);
@@ -55,7 +56,6 @@ namespace Sample.Components.StateMachines
             });
             Event(() => AccountClosed,
                 x => x.CorrelateBy((saga, context) => saga.CustomerNumber == context.Message.CustomerNumber));
-            Event(() => OrderAccepted, x => x.CorrelateById(m => m.Message.OrderId));
             Event(() => FulfillmentFaulted, x => x.CorrelateById(m => m.Message.OrderId));
             Event(() => FulfillmentCompleted, x => x.CorrelateById(m => m.Message.OrderId));
             Event(() => FulfillOrderFaulted, x => x.CorrelateById(m => m.Message.Message.OrderId));
@@ -69,7 +69,7 @@ namespace Sample.Components.StateMachines
                         context.Instance.SubmitDate = context.Data.Timestamp;
                         context.Instance.CustomerNumber = context.Data.CustomerNumber;
                         context.Instance.PaymentCardNumber = context.Data.PaymentCardNumber;
-
+                        
                         context.Instance.Updated = DateTime.UtcNow;
                     })
                     .TransitionTo(Submitted)
@@ -101,8 +101,7 @@ namespace Sample.Components.StateMachines
                     .RespondAsync(x => x.Init<OrderStatus>(new OrderStatus
                     {
                         OrderId = x.Instance.CorrelationId,
-                        State = x.Instance.CurrentState,
-                        CustomerNumber = x.Instance.CustomerNumber
+                        State = x.Instance.CurrentState
                     }))
             );
 

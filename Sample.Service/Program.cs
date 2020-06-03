@@ -106,8 +106,6 @@ namespace Sample.Service
 
                             b.Consumer<RoutingSlipBatchEventConsumer, RoutingSlipCompleted>(context.Container);
                         });
-                        
-                        // e.DiscardFaultedMessages();
                     });
                 cfg.ConfigureEndpoints(context);
             });

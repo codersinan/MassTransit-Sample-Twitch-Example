@@ -1,0 +1,14 @@
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1-alpine AS build
+WORKDIR .
+
+COPY ./Warehouse.Contracts/*.csproj ./Warehouse.Contracts/
+COPY ./Warehouse.Components/*.csproj ./Warehouse.Components/
+COPY ./Warehouse.Startup/*.csproj ./Warehouse.Startup/
+RUN dotnet restore ./Warehouse.Startup/Warehouse.Startup.csproj 
+
+COPY . .
+RUN dotnet publish -c Release -o /app ./Warehouse.Startup/Warehouse.Startup.csproj 
+
+FROM masstransit/platform:latest
+WORKDIR /app
+COPY --from=build /app ./

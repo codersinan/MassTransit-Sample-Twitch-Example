@@ -1,5 +1,4 @@
 using System;
-using MassTransit;
 
 namespace Sample.Api.Models
 {

@@ -12,14 +12,27 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+      - "15692:15692"
+    healthcheck:
+      timeout: 5s
+      interval: 5s
+      retries: 10
+      test:
+        - "CMD"
+        - "rabbitmqctl"
+        - "status"
 
-  redis:
-    container_name: twitch-redis
-    image: redis:6-alpine
+  quartz:
+    container_name: twitch-quartz
+    image: masstransit/quartz:latest
+    environment:
+      MT_Prometheus: 'quartz'
+      MT_Scheduler: 'quartz'
+      MT_Quartz__ConnectionString: 'Server=tcp:sqlserver;Database=quartznet;Persist Security Info=False;User ID=sa;Password=Quartz!DockerP4ss;Encrypt=False;TrustServerCertificate=True;'
     networks:
       - twitch
     ports:
-      - "6379:6379"
+      - 5002:80
 
   mongodb:
     container_name: twitch-mongo
@@ -27,4 +40,32 @@ services:
     networks:
       - twitch
     ports:
-      - "27017:27017"
+      - 27017-27019:27017-27019
+
+  warehouse:
+    image: twitch/warehouse:latest
+    container_name: twitch-warehouse
+    build:
+      context: .
+      dockerfile: Dockerfile-Warehouse
+    environment:
+      - MT_Prometheus=warehouse
+      - MT_Scheduler=quartz
+    networks:
+      - twitch
+    ports:
+      - 5100:80
+
+  sample:
+    image: twitch/sample:latest
+    container_name: twitch-sample
+    build:
+      context: .
+      dockerfile: Dockerfile-Sample
+    environment:
+      - MT_Prometheus=sample
+      - MT_Scheduler=quartz
+    networks:
+      - twitch
+    ports:
+      - 5200:80

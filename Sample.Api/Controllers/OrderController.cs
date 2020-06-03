@@ -1,7 +1,6 @@
 using System;
 using System.Threading.Tasks;
 using MassTransit;
-using MassTransit.MessageData;
 using MassTransit.MessageData.Values;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;

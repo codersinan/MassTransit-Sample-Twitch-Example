@@ -5,7 +5,6 @@ using FluentAssertions;
 using MassTransit;
 using MassTransit.Testing;
 using NUnit.Framework;
-using Sample.Components.Consumers;
 using Sample.Components.StateMachines;
 using Sample.Contracts.Customer;
 using Sample.Contracts.Order;
