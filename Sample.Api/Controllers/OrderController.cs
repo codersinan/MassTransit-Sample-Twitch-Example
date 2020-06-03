@@ -71,7 +71,7 @@ namespace Sample.Api.Controllers
                         Timestamp = InVar.Timestamp,
                         CustomerNumber = viewModel.CustomerNumber,
                         PaymentCardNumber = viewModel.PaymentCardNumber,
-                        Notes = new PutMessageData<string>(viewModel.Notes)
+                        Notes = new StringInlineMessageData(viewModel.Notes)
                     });
             if (accepted.IsCompletedSuccessfully)
             {
