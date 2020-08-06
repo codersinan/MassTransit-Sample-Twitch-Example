@@ -1,7 +1,5 @@
-﻿using System;
-using MassTransit;
+﻿using MassTransit;
 using MassTransit.ExtensionsDependencyInjectionIntegration;
-using MassTransit.MongoDbIntegration;
 using MassTransit.MongoDbIntegration.MessageData;
 using MassTransit.Platform.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,7 +15,7 @@ namespace Sample.Startup
     public class SampleStartup :
         IPlatformStartup
     {
-        public void ConfigureMassTransit(IServiceCollectionConfigurator configurator, IServiceCollection services)
+        public void ConfigureMassTransit(IServiceCollectionBusConfigurator configurator, IServiceCollection services)
         {
             services.AddScoped<AcceptOrderActivity>();
 
@@ -36,7 +34,7 @@ namespace Sample.Startup
         }
 
         public void ConfigureBus<TEndpointConfigurator>(IBusFactoryConfigurator<TEndpointConfigurator> configurator,
-            IRegistrationContext<IServiceProvider> context)
+            IBusRegistrationContext context)
             where TEndpointConfigurator : IReceiveEndpointConfigurator
         {
             configurator.UseMessageData(new MongoDbMessageDataRepository("mongodb://172.20.0.25:27017", "attachments"));//mongodb://mongo doesnt work. Changed to docker machine ip address

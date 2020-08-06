@@ -9,6 +9,6 @@ RUN dotnet restore ./Warehouse.Startup/Warehouse.Startup.csproj
 COPY . .
 RUN dotnet publish -c Release -o /app ./Warehouse.Startup/Warehouse.Startup.csproj 
 
-FROM masstransit/platform:latest
+FROM masstransit/platform:7
 WORKDIR /app
 COPY --from=build /app ./

@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using MassTransit;
 using MassTransit.Definition;
-using MassTransit.MongoDbIntegration;
+using MassTransit.RabbitMqTransport;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -53,7 +53,7 @@ namespace Warehouse.Service
                                 r.DatabaseName = "allocations";
                             });
 
-                        cfg.AddBus(ConfigureBus);
+                        cfg.UsingRabbitMq(ConfigureBus);
                     });
 
                     services.AddHostedService<MassTransitConsoleHostedService>();
@@ -69,17 +69,14 @@ namespace Warehouse.Service
                 await builder.UseWindowsService().Build().RunAsync();
             else
                 await builder.RunConsoleAsync();
-            
+
             Log.CloseAndFlush();
         }
 
-        static IBusControl ConfigureBus(IRegistrationContext<IServiceProvider> context)
+        static void ConfigureBus(IBusRegistrationContext context, IRabbitMqBusFactoryConfigurator configurator)
         {
-            return Bus.Factory.CreateUsingRabbitMq(cfg =>
-            {
-                cfg.UseMessageScheduler(new Uri("rabbitmq://localhost/quartz"));
-                cfg.ConfigureEndpoints(context);
-            });
+            configurator.UseMessageScheduler(new Uri("rabbitmq://localhost/quartz"));
+            configurator.ConfigureEndpoints(context);
         }
     }
 }

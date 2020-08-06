@@ -1,7 +1,5 @@
-﻿using System;
-using MassTransit;
+﻿using MassTransit;
 using MassTransit.ExtensionsDependencyInjectionIntegration;
-using MassTransit.MongoDbIntegration;
 using MassTransit.Platform.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Warehouse.Components.Consumers;
@@ -12,7 +10,7 @@ namespace Warehouse.Startup
     public class WarehouseStartup :
         IPlatformStartup
     {
-        public void ConfigureMassTransit(IServiceCollectionConfigurator configurator, IServiceCollection services)
+        public void ConfigureMassTransit(IServiceCollectionBusConfigurator configurator, IServiceCollection services)
         {
             configurator.AddConsumersFromNamespaceContaining<AllocateInventoryConsumer>();
             configurator
@@ -25,7 +23,7 @@ namespace Warehouse.Startup
         }
 
         public void ConfigureBus<TEndpointConfigurator>(IBusFactoryConfigurator<TEndpointConfigurator> configurator,
-            IRegistrationContext<IServiceProvider> context)
+            IBusRegistrationContext context)
             where TEndpointConfigurator : IReceiveEndpointConfigurator
         {
         }

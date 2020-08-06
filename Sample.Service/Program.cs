@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 using MassTransit;
 using MassTransit.Courier.Contracts;
 using MassTransit.Definition;
-using MassTransit.MongoDbIntegration;
 using MassTransit.MongoDbIntegration.MessageData;
+using MassTransit.RabbitMqTransport;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -35,7 +35,7 @@ namespace Sample.Service
                 .Enrich.FromLogContext()
                 .WriteTo.Console()
                 .CreateLogger();
-            
+
             var builder = new HostBuilder()
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
@@ -65,7 +65,7 @@ namespace Sample.Service
                                 r.DatabaseName = "orders";
                             });
 
-                        cfg.AddBus(ConfigureBus);
+                        cfg.UsingRabbitMq(ConfigureBus);
 
                         cfg.AddRequestClient<AllocateInventory>();
                     });
@@ -84,31 +84,28 @@ namespace Sample.Service
                 await builder.UseWindowsService().Build().RunAsync();
             else
                 await builder.RunConsoleAsync();
-            
+
             Log.CloseAndFlush();
         }
 
-        static IBusControl ConfigureBus(IRegistrationContext<IServiceProvider> context)
+        static void ConfigureBus(IBusRegistrationContext context, IRabbitMqBusFactoryConfigurator configurator)
         {
-            return Bus.Factory.CreateUsingRabbitMq(cfg =>
-            {
-                cfg.UseMessageData(new MongoDbMessageDataRepository("mongodb://127.0.0.1","attachments"));
-                
-                cfg.UseMessageScheduler(new Uri("queue://quartz"));
-                cfg.ReceiveEndpoint(KebabCaseEndpointNameFormatter.Instance.Consumer<RoutingSlipBatchEventConsumer>(),
-                    e =>
-                    {
-                        e.PrefetchCount = 10;
-                        e.Batch<RoutingSlipCompleted>(b =>
-                        {
-                            b.MessageLimit = 10;
-                            b.TimeLimit = TimeSpan.FromSeconds(5);
+            configurator.UseMessageData(new MongoDbMessageDataRepository("mongodb://127.0.0.1", "attachments"));
 
-                            b.Consumer<RoutingSlipBatchEventConsumer, RoutingSlipCompleted>(context.Container);
-                        });
+            configurator.UseMessageScheduler(new Uri("queue://quartz"));
+            configurator.ReceiveEndpoint(KebabCaseEndpointNameFormatter.Instance.Consumer<RoutingSlipBatchEventConsumer>(),
+                e =>
+                {
+                    e.PrefetchCount = 10;
+                    e.Batch<RoutingSlipCompleted>(b =>
+                    {
+                        b.MessageLimit = 10;
+                        b.TimeLimit = TimeSpan.FromSeconds(5);
+
+                        b.Consumer<RoutingSlipBatchEventConsumer, RoutingSlipCompleted>(context);
                     });
-                cfg.ConfigureEndpoints(context);
-            });
+                });
+            configurator.ConfigureEndpoints(context);
         }
     }
 }

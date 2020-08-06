@@ -10,6 +10,6 @@ RUN dotnet restore ./Sample.Startup/Sample.Startup.csproj
 COPY . .
 RUN dotnet publish -c Release -o /app ./Sample.Startup/Sample.Startup.csproj 
 
-FROM masstransit/platform:latest
+FROM masstransit/platform:7
 WORKDIR /app
 COPY --from=build /app ./

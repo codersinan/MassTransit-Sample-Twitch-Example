@@ -26,23 +26,23 @@ namespace Sample.Api
         public void ConfigureServices(IServiceCollection services)
         {
             services.TryAddSingleton(KebabCaseEndpointNameFormatter.Instance);
-            services.AddMassTransit(cfg =>
+            services.AddMassTransit(configurator =>
             {
-                cfg.AddBus(provider => Bus.Factory.CreateUsingRabbitMq(x =>
+                configurator.UsingRabbitMq((context, cfg) =>
                 {
                     MessageDataDefaults.ExtraTimeToLive = TimeSpan.FromDays(1);
                     MessageDataDefaults.TimeToLive = TimeSpan.FromDays(7);
                     MessageDataDefaults.Threshold = 2000; //8000
                     MessageDataDefaults.AlwaysWriteToRepository = false;
 
-                    x.UseMessageData(new MongoDbMessageDataRepository("mongodb://127.0.0.1", "attachments"));
-                }));
+                    cfg.UseMessageData(new MongoDbMessageDataRepository("mongodb://127.0.0.1", "attachments"));
+                });
 
-                cfg.AddRequestClient<SubmitOrder>(
+                configurator.AddRequestClient<SubmitOrder>(
                     new Uri($"queue:{KebabCaseEndpointNameFormatter.Instance.Consumer<SubmitOrderConsumer>()}")
                 );
 
-                cfg.AddRequestClient<CheckOrder>();
+                configurator.AddRequestClient<CheckOrder>();
             });
 
             services.AddMassTransitHostedService();
